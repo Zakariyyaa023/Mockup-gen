@@ -4,7 +4,7 @@ const promptInput = document.querySelector(".prompt-input");
 const generateBtn = document.querySelector(".generate-btn");
 const galleryGrid = document.querySelector(".gallery-grid");
 const modelSelect = document.getElementById("model-select");
-const countSelect = document.getElementById("count-select");
+
 const ratioSelect = document.getElementById("ratio-select");
 const textArea = document.getElementById("generatedCode");
 
@@ -197,7 +197,7 @@ const createImageCards = async (imageCount, aspectRatio, promptText) => {
 const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const imageCount = parseInt(countSelect.value) || 1;
+    const imageCount = 1;
     const aspectRatio = ratioSelect.value || "1/1";
     const promptText = promptInput.value.trim();
 
