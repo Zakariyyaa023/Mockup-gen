@@ -1,0 +1,193 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: radial-gradient(circle at top, #0d1b2a, #000000);
+    color: #e0eafc;
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Title */
+.title {
+    font-size: 3rem;
+    color: #72ffff;
+    text-shadow: 0 0 15px #00c3ff;
+    margin-bottom: 2rem;
+}
+
+/* Main Content Wrapper */
+.main-content#uiMockGeneratorContent {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #1f4068;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #0f3460;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Form Styles */
+  .prompt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Prompt Container (textarea + dice button) */
+.prompt-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.prompt-input {
+    flex: 1;
+    background: #0b0c10;
+    color: #c5c6c7;
+    border: 1px solid #1f2833;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.prompt-input::placeholder {
+    color: #7f8c8d;
+}
+
+/* Prompt Button (dice icon) */
+.prompt-btn {
+    background: linear-gradient(135deg, #1e90ff, #00bfff);
+    border: none;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prompt-btn i {
+    margin-right: 6px;
+}
+
+.prompt-btn:hover {
+    background: linear-gradient(135deg, #00bfff, #1e90ff);
+    transform: scale(1.05);
+}
+
+/* Prompt Actions - dropdowns and generate button */
+.prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Select Wrapper */
+.select-wrapper {
+    flex: 1;
+    min-width: 140px;
+}
+
+.custom-select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #1f2833;
+    background: #0b0c10;
+    color: #c5c6c7;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: #00bfff;
+    box-shadow: 0 0 5px #00bfff;
+}
+
+/* Generate Button */
+.generate-btn {
+    background: linear-gradient(135deg, #1e90ff, #00bfff);
+    border: none;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.generate-btn i {
+    margin-right: 0;
+}
+
+.generate-btn:hover {
+  background: linear-gradient(135deg, #00bfff, #1e90ff);
+  transform: scale(1.05);
+}
+
+/* Gallery Grid */
+.gallery-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* Code Output Container */
+.code-output-container {
+    display: flex;
+    flex-direction: column;
+}
+
+#generatedCode {
+    width: 100%;
+    height: 200px;
+    background: #111;
+    color: #00eaff;
+    border: 1px solid #00bcd4;
+    padding: 1rem;
+    font-family: monospace;
+    border-radius: 8px;
+    resize: vertical;
+    margin-top: 0.5rem;
+}
+
+/* Scrollbar Styling (Optional) */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a192f;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1f4068;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64ffda;
+}
