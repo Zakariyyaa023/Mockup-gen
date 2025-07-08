@@ -15,7 +15,43 @@ body {
     flex-direction: column;
     align-items: center;
 }
+.img-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+}
 
+.result-img {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+}
+
+.img-overlay {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
+.img-download-btn {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 0.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.img-download-btn:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
 /* Title */
 .title {
     font-size: 3rem;
