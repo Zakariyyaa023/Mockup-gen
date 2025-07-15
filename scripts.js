@@ -2,11 +2,21 @@ const promptFormUI = document.querySelector(".prompt-form");
 const promptBtn = document.querySelector(".prompt-btn");
 const promptInput = document.querySelector(".prompt-input");
 const generateBtn = document.querySelector(".generate-btn");
-const galleryGrid = document.querySelector(".gallery-grid");
 const modelSelect = document.getElementById("model-select");
-
-const ratioSelect = document.getElementById("ratio-select");
 const textArea = document.getElementById("generatedCode");
+const showLiveCode = document.getElementById("codePreview");
+const mainContent = document.getElementById("uiMockGeneratorContent");
+const title = document.querySelector(".title");
+const body = document.body;
+const previewContainer = document.getElementById("previewContainer");
+const sidebarPreview = document.getElementById("sidebarPreview");
+
+let sidebarTransitioned = false;
+
+promptInput.addEventListener('input', () => {
+  promptInput.style.height = 'auto'; 
+  promptInput.style.height = promptInput.scrollHeight + 'px';
+});
 
 const examplePrompts = [
     "Mobile login screen with a clean white background, email and password fields, Google login button, and a 'Forgot password?' link at the bottom.",
@@ -39,7 +49,7 @@ const examplePrompts = [
     "Simple newsletter signup popup with email input, checkbox for terms agreement, and a submit button with success confirmation.",
     "Online bookstore homepage featuring bestseller carousel, search bar, categories sidebar, and user reviews section.",
     "Healthcare appointment booking UI with doctor list, date/time picker, patient info form, and confirmation screen."
-    ];
+];
 
 async function isValidUIPromptUiMock(prompt) {
     const question = `Only answer with yes or no, is this a UI Design prompt or related to UI designs prompt = (${prompt})`;
@@ -55,11 +65,9 @@ async function isValidUIPromptUiMock(prompt) {
 
         if (!response.ok) throw new Error("Text generation failed");
 
-            const text = (await response.text()).toLowerCase();
-
-    
-            console.log("Pollinations response:", text);
-            const trimmedText = text.trim(); 
+        const text = (await response.text()).toLowerCase();
+        console.log("Pollinations response:", text);
+        const trimmedText = text.trim(); 
         return trimmedText === "yes"
     }
     catch (error) {
@@ -68,63 +76,35 @@ async function isValidUIPromptUiMock(prompt) {
     }
 }
 
-// Calculate width/height based on chosen ratio
-const getImageDimensions = (aspectRatio, baseSize = 512) => {
-    const [width, height] = aspectRatio.split("/").map(Number);
-    const scaleFactor = baseSize / Math.sqrt(width * height);
-    let calculatedWidth = Math.round(width * scaleFactor);
-    let calculatedHeight = Math.round(height * scaleFactor);
-    // Ensure dimensions are multiples of 16 (AI model requirements)
-    calculatedWidth = Math.floor(calculatedWidth / 16) * 16;
-    calculatedHeight = Math.floor(calculatedHeight / 16) * 16;
-    return { width: calculatedWidth, height: calculatedHeight };
-};
-    // Replace loading spinner with the actual image
-const updateImageCard = (index, imageUrl) => {
-    const imgCard = document.getElementById(`img-card-${index}`);
-    if (!imgCard) return;
-    imgCard.classList.remove("loading");
-    imgCard.innerHTML = `<img class="result-img" src="${imageUrl}" />
-        <div class="img-overlay">
-        <a href="${imageUrl}" class="img-download-btn" title="Download Image" download>
-            <i class="fa-solid fa-download"></i>
-        </a>
-        </div>`;
-};
-
-// Send requests to poli API to create images
-const generateImages = async (imageCount, aspectRatio, promptText) => {
-    const { width, height } = getImageDimensions(aspectRatio);
-    generateBtn.setAttribute("disabled", "true");
-
-    const encodedPrompt = encodeURIComponent(promptText);
-
-    for (let i = 0; i < imageCount; i++) {
-        try {
-        const seed = Math.floor(Math.random() * 1000000);
-        const imageUrl = `/.netlify/functions/pollinations-image?prompt=${encodedPrompt}&width=${width}&height=${height}`;
-
-
-        const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error("Image generation failed");
-
-        const blob = await response.blob();
-        updateImageCard(i, URL.createObjectURL(blob));
-
-        } catch (error) {
-            console.error(error);
-            const imgCard = document.getElementById(`img-card-${i}`);
-            imgCard.classList.replace("loading", "error");
-            imgCard.querySelector(".status-text").textContent = "Generation failed! Check console for more details.";
-        }
+// Function to transition to sidebar layout
+function transitionToSidebar() {
+    if (!sidebarTransitioned) {
+        sidebarTransitioned = true;
+        
+        // Add classes to trigger the transition
+        body.classList.add('sidebar-active');
+        mainContent.classList.add('sidebar-active');
+        title.classList.add('sidebar-active');
+        showLiveCode.classList.add('sidebar-active');
+        previewContainer.classList.add('show');
+        
+        // Adjust iframe height after transition
+        setTimeout(() => {
+            adjustIframeHeight();
+        }, 600); // Wait for transition to complete
     }
-};
+}
 
-
+// Function to adjust iframe height
+function adjustIframeHeight() {
+    const iframe = document.getElementById('codePreview');
+    if (iframe && iframe.classList.contains('sidebar-active')) {
+        iframe.style.height = '100vh';
+    }
+}
 
 // sending requests to poli Api to give texts and code related
 const generateTextCode = async (promptText) => {
-    await delay(4000);
     generateBtn.setAttribute("disabled", "true");
     let i = 0;
     let generatedText = "";
@@ -146,19 +126,26 @@ const generateTextCode = async (promptText) => {
 
         generatedText = await response.text();
         console.log("Pollinations response:", generatedText);
-
+        
         const codeTextarea = document.getElementById("generatedCode");
         if (codeTextarea) {
             codeTextarea.value = ""; // Clear before typing
 
             const typeInterval = setInterval(() => {
                 if (i < generatedText.length) {
-                codeTextarea.value += generatedText.charAt(i);
-                codeTextarea.scrollTop = codeTextarea.scrollHeight; // Auto-scroll
-                i++;
+                    codeTextarea.value += generatedText.charAt(i);
+                    codeTextarea.scrollTop = codeTextarea.scrollHeight; // Auto-scroll
+                    i++;
+
                 } else {
-                clearInterval(typeInterval);
-                generateBtn.removeAttribute("disabled");
+                    autoResize();
+                    clearInterval(typeInterval);
+                    generateBtn.removeAttribute("disabled");
+                    // After typing animation completes, transition to sidebar
+                    setTimeout(() => {
+                        transitionToSidebar();
+                        renderCodeInIframe(generatedText);
+                    }, 500); // Small delay before transition
                 }
             }, 5);
         }
@@ -167,38 +154,48 @@ const generateTextCode = async (promptText) => {
         console.error("Error generating text/code:", error);
         const codeTextarea = document.getElementById("generatedCode");
         if (codeTextarea) {
-        codeTextarea.value = "// Error generating code. See console.";
+            codeTextarea.value = "// Error generating code. See console.";
         }
+        generateBtn.removeAttribute("disabled");
     } 
 };
 
+function renderCodeInIframe(codeString) {
+    showLiveCode.classList.add("show");
+    const iframe = document.getElementById('codePreview');
+    const sidebarIframe = document.getElementById('sidebarPreview');
+    
+    // Remove markdown fences from the code string (if present)
+    const cleanedCode = codeString
+        .replace(/^```html\s*/i, '')
+        .replace(/```$/, '');
 
-// Create placeholder cards with loading spinners
-const createImageCards = async (imageCount, aspectRatio, promptText) => {
-    galleryGrid.innerHTML = "";
-    for (let i = 0; i < imageCount; i++) {
-        galleryGrid.innerHTML += `
-        <div class="img-card loading" id="img-card-${i}" style="aspect-ratio: ${aspectRatio}">
-            <div class="status-container">
-            <div class="spinner"></div>
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <p class="status-text">Generating...</p>
-            </div>
-        </div>`;
-    }
-    document.querySelectorAll(".img-card").forEach((card, i) => {
-        setTimeout(() => card.classList.add("animate-in"), 100 * i);
+    // Render in both iframes
+    [iframe, sidebarIframe].forEach(frame => {
+        if (frame) {
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            doc.open();
+            doc.write(cleanedCode);
+            doc.close();
+        }
     });
 
-    await generateImages(imageCount, aspectRatio, promptText);
-};
-
+    // Adjust iframe height based on content if not in sidebar mode
+    if (!iframe.classList.contains('sidebar-active')) {
+        iframe.style.height = 'auto';
+        setTimeout(() => {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const body = doc.body;
+            if (body) {
+                iframe.style.height = body.scrollHeight + 'px';
+            }
+        }, 50);
+    }
+}
 
 const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const imageCount = 1;
-    const aspectRatio = ratioSelect.value || "1/1";
     const promptText = promptInput.value.trim();
 
     // Use the scoring-based validator (synchronous function)
@@ -213,12 +210,9 @@ const handleFormSubmit = async (e) => {
         return;
     }
 
-    // Proceed with generation
-    await createImageCards(imageCount, aspectRatio, promptText);
-    await generateTextCode(`Please provide a detailed explanation along with the code for what was done and ${promptText}. Do not ask me further, just end the conversation politely.`);
+    // Show iframe and proceed with generation
+    await generateTextCode(`Generate HTML, CSS, and optional JavaScript code for the following UI mockup design: ${promptText}. Only provide the code and necessary comments, no explanations.`);
 };
-
-
 
 // Fill prompt input with random example (typing effect)
 promptBtn.addEventListener("click", () => {
@@ -230,17 +224,41 @@ promptBtn.addEventListener("click", () => {
     promptBtn.style.opacity = "0.5";
     const typeInterval = setInterval(() => {
         if (i < prompt.length) {
-        promptInput.value += prompt.charAt(i);
-        i++;
+            promptInput.value += prompt.charAt(i);
+            i++;
         } else {
-        clearInterval(typeInterval);
-        promptBtn.disabled = false;
-        promptBtn.style.opacity = "0.8";
+            clearInterval(typeInterval);
+            promptBtn.disabled = false;
+            promptBtn.style.opacity = "1";
         }
     }, 10); // Speed of typing
 });
 
 promptFormUI.addEventListener("submit", handleFormSubmit);
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+
+// Handle window resize to adjust iframe
+window.addEventListener('resize', () => {
+    if (sidebarTransitioned) {
+        adjustIframeHeight();
+    }
+});
+
+
+
+const textarea = document.getElementById('generatedCode');
+
+  function autoResize() {
+    textarea.style.height = 'auto'; // reset height
+    textarea.style.height = textarea.scrollHeight + 'px'; // set to scrollHeight
+  }
+
+  // Example: Simulate typing or updating content gradually
+  function simulateTyping(text, index = 0) {
+    if (index <= text.length) {
+      textarea.value = text.slice(0, index);
+      autoResize();
+      setTimeout(() => simulateTyping(text, index + 1), 50);
+    }
+  }
+
+  // Run on page load for initial content or empty
