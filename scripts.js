@@ -211,7 +211,7 @@ const handleFormSubmit = async (e) => {
     }
 
     // Show iframe and proceed with generation
-    await generateTextCode(`Generate HTML, CSS, and optional JavaScript code for the following UI mockup design: ${promptText}. Only provide the code and necessary comments, no explanations.`);
+    await generateTextCode(`Generate clean and functional HTML, CSS, and optional JavaScript code for the following UI mockup: ${promptText}. Ensure all CSS and JS are embedded within appropriate <style> and <script> tags inside the HTML. Only return the code with concise, relevant comments — no explanations.`);
 };
 
 // Fill prompt input with random example (typing effect)
