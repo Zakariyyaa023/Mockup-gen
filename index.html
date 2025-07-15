@@ -9,12 +9,16 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1 class="title">UI Mockup content Generator</h1>
+    <div id="tabSwitcher" style="display:none;">
+        <button id="codeTab" class="active" type="button">Code</button>
+        <button id="previewTab" type="button">Preview</button>
+    </div>
 
     <div class="main-content" id="Mockup-gen"></div>
 
     <div class="main-content" id="uiMockGeneratorContent">
       <form action="#" class="prompt-form">
+        <h1 class="title">UI Mockup content Generator</h1>
         <div class="prompt-container">
           <textarea
             class="prompt-input"
@@ -29,16 +33,6 @@
         </div>
 
         <div class="prompt-actions">
-          
-          <div class="select-wrapper">
-            <select class="custom-select" id="ratio-select" required>
-              <option value="" selected disabled>Aspect Ratio</option>
-              <option value="1/1">Square (1:1)</option>
-              <option value="16/9">Landscape (16:9)</option>
-              <option value="9/16">Portrait (9:16)</option>
-            </select>
-          </div>
-
           <button type="submit" class="generate-btn">
             <i class="fa-solid fa-wand-sparkles"></i>
             Generate
@@ -58,7 +52,15 @@
             readonly
             placeholder="Please be patient as it can take time to generate, generated code and explanation will appear here..."
           ></textarea>
+          <iframe id="codePreview" style="width:100%; border:1px solid #ccc;"></iframe>
         </div>
+      </form>
+    </div>
+
+    <!-- Preview container for sidebar layout -->
+    <div class="preview-container" id="previewContainer">
+      <iframe id="sidebarPreview" src="about:blank"></iframe>
+    </div>
       </form>
     </div>
 
