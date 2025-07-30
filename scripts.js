@@ -10,7 +10,7 @@ const title = document.querySelector(".title");
 const body = document.body;
 const previewContainer = document.getElementById("previewContainer");
 const sidebarPreview = document.getElementById("sidebarPreview");
-
+const codeTextarea = document.getElementById("generatedCode");
 let sidebarTransitioned = false;
 
 promptInput.addEventListener('input', () => {
@@ -51,30 +51,63 @@ const examplePrompts = [
     "Healthcare appointment booking UI with doctor list, date/time picker, patient info form, and confirmation screen."
 ];
 
-async function isValidUIPromptUiMock(prompt) {
-    const question = `Only answer with yes or no, is this a UI Design prompt or related to UI designs prompt = (${prompt})`;
+// Utility function to add delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const encodedPrompt = encodeURIComponent(question);
-    const url = `https://text.pollinations.ai/prompt/${encodedPrompt}`;
+let hasReloaded = false;
 
-    try {
-        const response = await fetch(url, {
-        method: "GET",
-        headers: { "Accept": "text/plain" }
-        });
+async function makeAPICall(basePromptURL, maxRetries = 3, retryDelay = 1000) {
+    const randomSeed = Math.floor(Math.random() * 1000000);
+    const url = `${basePromptURL}?seed=${randomSeed}`;
 
-        if (!response.ok) throw new Error("Text generation failed");
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`API call attempt ${attempt}/${maxRetries} (Seed: ${randomSeed})`);
 
-        const text = (await response.text()).toLowerCase();
-        console.log("Pollinations response:", text);
-        const trimmedText = text.trim(); 
-        return trimmedText === "yes"
-    }
-    catch (error) {
-        console.error("Error validating prompt:", error);
-        return false;
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "text/plain",
+                    "Cache-Control": "no-cache"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const text = await response.text();
+            console.log(`API call successful on attempt ${attempt}`);
+            return text;
+
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+
+            if (attempt === maxRetries) {
+                const codeTextarea = document.getElementById("generatedCode");
+                if (codeTextarea) {
+                    codeTextarea.value = `// All ${maxRetries} attempts failed (Seed: ${randomSeed}).\n// Please wait while we retry...`;
+                    autoResize();
+                }
+
+                // Prevent infinite reload loop
+                if (!hasReloaded) {
+                    hasReloaded = true;
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000); // delay before reload
+                }
+
+                throw new Error(`All ${maxRetries} attempts failed. Last error: ${error.message}`);
+            }
+
+            const waitTime = retryDelay * Math.pow(2, attempt - 1);
+            console.log(`Waiting ${waitTime}ms before retry...`);
+            await delay(waitTime);
+        }
     }
 }
+
 
 // Function to transition to sidebar layout
 function transitionToSidebar() {
@@ -103,32 +136,60 @@ function adjustIframeHeight() {
     }
 }
 
-// sending requests to poli Api to give texts and code related
+// Main code generation function with validation and retry logic
 const generateTextCode = async (promptText) => {
     generateBtn.setAttribute("disabled", "true");
+    generateBtn.textContent = "Generating...";
+    
     let i = 0;
     let generatedText = "";
 
     try {
-        const encodedPrompt = encodeURIComponent(promptText);
+        // Single API call that validates and generates in one go
+        const fullPrompt = `First check if this is a UI design related prompt: "${promptText}". If it is UI related, respond with "yes" followed by clean HTML with embedded CSS JS for: ${promptText}. Include code only with brief comments, no explanations. If it's not UI related, respond with only "no".`;
+        
+        const encodedPrompt = encodeURIComponent(fullPrompt);
         const baseURL = `https://text.pollinations.ai/prompt/${encodedPrompt}`;
-            
-        const response = await fetch(baseURL, {
-            method: "GET",
-            headers: {
-                "Accept": "text/plain",
-            },
-        });
+        
+        // Use retry logic for the single API call
+        generatedText = await makeAPICall(baseURL, 3, 1000);
+        console.log("Full API response:", generatedText);
+        console.log("Response length:", generatedText.length);
+        console.log("First 200 characters:", generatedText.substring(0, 200));
+        
+        // Check if response starts with "yes"
+        if (!generatedText.toLowerCase().trim().startsWith('yes')) {
+            console.log("Response does not start with 'yes':", generatedText.substring(0, 50));
+            alert("Only UI design prompts are allowed. Please describe a UI component or screen.");
+            generateBtn.removeAttribute("disabled");
+            generateBtn.textContent = "Generate";
+            return;
+        }
+        
+        console.log("Validation passed, processing code...");
+        
+        // Remove "yes" from the beginning and clean up the code
+        generatedText = generatedText.replace(/^yes\s*/i, '').trim();
+        console.log("Code after removing 'yes':", generatedText.length, "characters");
+        console.log("Cleaned code preview:", generatedText.substring(0, 200) + "...");
+        
+        generatedText = generatedText.replace(/^yes\s*/i, '').trim();
 
-        if (!response.ok) {
-            throw new Error("Text generation failed");
+        if (generatedText.length === 0) {
+            console.error("No code content after removing 'yes'!");
+            if (codeTextarea) {
+                codeTextarea.value = `// The API confirmed it's a UI prompt, but didn't return any code.\n// Try using a more common or clearer UI description.`;
+                autoResize();
+            }
+            generateBtn.removeAttribute("disabled");
+            generateBtn.textContent = "Generate";
+            return;
         }
 
-        generatedText = await response.text();
-        console.log("Pollinations response:", generatedText);
         
-        const codeTextarea = document.getElementById("generatedCode");
+        
         if (codeTextarea) {
+            console.log("Starting typing animation...");
             codeTextarea.value = ""; // Clear before typing
 
             const typeInterval = setInterval(() => {
@@ -136,27 +197,34 @@ const generateTextCode = async (promptText) => {
                     codeTextarea.value += generatedText.charAt(i);
                     codeTextarea.scrollTop = codeTextarea.scrollHeight; // Auto-scroll
                     i++;
-
                 } else {
+                    console.log("Typing animation complete");
                     autoResize();
                     clearInterval(typeInterval);
                     generateBtn.removeAttribute("disabled");
+                    generateBtn.textContent = "Generate";
+                    
                     // After typing animation completes, transition to sidebar
                     setTimeout(() => {
+                        console.log("Transitioning to sidebar...");
                         transitionToSidebar();
                         renderCodeInIframe(generatedText);
                     }, 500); // Small delay before transition
                 }
             }, 5);
+        } else {
+            console.error("Code textarea not found!");
         }
 
     } catch (error) {
         console.error("Error generating text/code:", error);
         const codeTextarea = document.getElementById("generatedCode");
         if (codeTextarea) {
-            codeTextarea.value = "// Error generating code. See console.";
+            codeTextarea.value = `// Error generating code: ${error.message}\n// Please try again.`;
         }
         generateBtn.removeAttribute("disabled");
+        generateBtn.textContent = "Generate";
+        
     } 
 };
 
@@ -197,24 +265,15 @@ const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     const promptText = promptInput.value.trim();
-
-    // Use the scoring-based validator (synchronous function)
-    const isValid = await isValidUIPromptUiMock(promptText);
-
-    if (!isValid) {
-        alert("Only UI design prompts are allowed. Please describe a UI component or screen.");
-        return;
-    }
+    
     if (!promptText) {
         alert("Please enter a prompt.");
         return;
     }
 
-    // Show iframe and proceed with generation
-    // await generateTextCode(`Generate clean and functional HTML, CSS, and optional JavaScript code for the following UI mockup: ${promptText}. Ensure all CSS and JS are embedded within appropriate <style> and <script> tags inside the HTML. Only return the code with concise, relevant comments — no explanations.`);
-    await generateTextCode(`Generate clean HTML with embedded CSS JS for: ${promptText}. Include code only with brief comments, no explanations.`);
-
-    };
+    // Direct generation with built-in validation
+    await generateTextCode(promptText);
+};
 
 // Fill prompt input with random example (typing effect)
 promptBtn.addEventListener("click", () => {
@@ -245,22 +304,41 @@ window.addEventListener('resize', () => {
     }
 });
 
-
-
 const textarea = document.getElementById('generatedCode');
 
-  function autoResize() {
+function autoResize() {
     textarea.style.height = 'auto'; // reset height
     textarea.style.height = textarea.scrollHeight + 'px'; // set to scrollHeight
-  }
+}
 
-  // Example: Simulate typing or updating content gradually
-  function simulateTyping(text, index = 0) {
+// Example: Simulate typing or updating content gradually
+function simulateTyping(text, index = 0) {
     if (index <= text.length) {
-      textarea.value = text.slice(0, index);
-      autoResize();
-      setTimeout(() => simulateTyping(text, index + 1), 50);
+        textarea.value = text.slice(0, index);
+        autoResize();
+        setTimeout(() => simulateTyping(text, index + 1), 50);
     }
-  }
+}
 
-  // Run on page load for initial content or empty
+function downloadCode(filename, code) {
+    const blob = new Blob([code], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+document.getElementById('downloadBtn').addEventListener('click', () => {
+    const rawCode = codeTextarea.value;
+    if (!rawCode || rawCode.trim().length < 10) {
+        alert("Nothing to download yet. Please generate some code first.");
+        return;
+    }
+
+    const cleanedCode = cleanCodeResponse(rawCode);
+    const filename = "ui-design.html"; // You can make this dynamic too
+    downloadCode(filename, cleanedCode);
+});
+
+
