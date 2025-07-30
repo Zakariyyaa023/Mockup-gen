@@ -256,6 +256,46 @@ body.sidebar-active {
     gap: 1rem;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
+/* download button  */
+/* Download Button */
+#downloadBtn {
+  background: linear-gradient(135deg, #1e90ff, #00bfff);
+  border: none;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+body.sidebar-active #downloadBtn {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+#downloadBtn i {
+  /* if you add an icon inside the button */
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+#downloadBtn:hover {
+  background: linear-gradient(135deg, #00bfff, #1e90ff);
+  transform: scale(1.05);
+}
+
+/* Disabled state (if you choose to disable it when no code) */
+#downloadBtn:disabled {
+  background-color: #333;
+  color: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 /* Code Output Container */
 .code-output-container {
