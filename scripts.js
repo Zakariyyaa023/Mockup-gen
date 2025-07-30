@@ -329,16 +329,18 @@ function downloadCode(filename, code) {
     a.click();
     URL.revokeObjectURL(url);
 }
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', (e) => {
+    e.preventDefault(); 
+
     const rawCode = codeTextarea.value;
     if (!rawCode || rawCode.trim().length < 10) {
         alert("Nothing to download yet. Please generate some code first.");
         return;
     }
 
-    const cleanedCode = cleanCodeResponse(rawCode);
-    const filename = "ui-design.html"; // You can make this dynamic too
-    downloadCode(filename, cleanedCode);
+    const filename = "ui-design.html"; // Static or make it dynamic
+    downloadCode(filename, rawCode); // Use raw code directly
 });
+
 
 
